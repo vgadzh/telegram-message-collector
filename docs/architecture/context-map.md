@@ -21,8 +21,6 @@ Infrastructure Context
 supports all contexts
 ```
 
-⸻
-
 ## Identity Context → Session Management Context
 
 The Session Management Context depends on the Identity Context.
