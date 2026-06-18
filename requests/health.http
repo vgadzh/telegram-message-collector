@@ -1,0 +1,5 @@
+### Live
+GET {{baseURL}}/health/live
+
+### Ready
+GET {{baseURL}}/health/ready
