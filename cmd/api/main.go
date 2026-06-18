@@ -35,10 +35,7 @@ func run() error {
 		_ = logger.Sync()
 	}()
 
-	app, err := app.New(ctx, cfg, logger)
-	if err != nil {
-		return fmt.Errorf("create app: %w", err)
-	}
+	app := app.New(ctx, cfg, logger)
 
 	logger.Info("service starting")
 	return app.Run()

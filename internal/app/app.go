@@ -18,7 +18,7 @@ type App struct {
 	httpServer *httpserver.Server
 }
 
-func New(ctx context.Context, cfg *config.Config, logger *zap.Logger) (*App, error) {
+func New(ctx context.Context, cfg *config.Config, logger *zap.Logger) *App {
 	httpServer := httpserver.New(cfg, logger)
 	a := &App{
 		ctx:        ctx,
@@ -26,28 +26,27 @@ func New(ctx context.Context, cfg *config.Config, logger *zap.Logger) (*App, err
 		logger:     logger,
 		httpServer: httpServer,
 	}
-	return a, nil
+	return a
 }
 
 func (a *App) Run() error {
 	go func() {
-		a.logger.Info("http server started")
+		<-a.ctx.Done()
+		a.logger.Info("shutdown started")
 
-		err := a.httpServer.Run()
-		if err != nil && !errors.Is(err, http.ErrServerClosed) {
-			a.logger.Error("http server stopped", zap.Error(err))
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), a.cfg.HTTP.ShutdownTimeout)
+		defer cancel()
+
+		if err := a.httpServer.Shutdown(shutdownCtx); err != nil {
+			a.logger.Error("shutdown http server", zap.Error(err))
 		}
 	}()
 
-	<-a.ctx.Done()
-	a.logger.Info("shutdown started")
-
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), a.cfg.HTTP.ShutdownTimeout)
-	defer cancel()
-
-	if err := a.httpServer.Shutdown(shutdownCtx); err != nil {
-		return fmt.Errorf("shutdown http server: %w", err)
+	a.logger.Info("starting http server")
+	if err := a.httpServer.Run(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		return fmt.Errorf("run http server: %w", err)
 	}
 
+	a.logger.Info("service stopped")
 	return nil
 }
