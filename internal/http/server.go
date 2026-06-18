@@ -8,6 +8,7 @@ import (
 
 	"github.com/vgadzh/telegram-message-collector/internal/config"
 	"github.com/vgadzh/telegram-message-collector/internal/http/handler"
+	"github.com/vgadzh/telegram-message-collector/internal/http/middleware"
 	"go.uber.org/zap"
 )
 
@@ -19,7 +20,10 @@ func New(cfg *config.Config, logger *zap.Logger) *Server {
 	healthHandler := handler.NewHealthHandler()
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health/live", healthHandler.Live)
-	handlerChain := mux
+	handlerChain := middleware.Chain(
+		mux,
+		middleware.Logging(logger),
+	)
 	return &Server{
 		httpServer: &http.Server{
 			Addr:              cfg.HTTP.Host + ":" + strconv.Itoa(cfg.HTTP.Port),
