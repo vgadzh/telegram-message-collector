@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/vgadzh/telegram-message-collector/internal/observability/logctx"
 	"go.uber.org/zap"
 )
 
@@ -26,19 +28,28 @@ func (w *statusRecorder) WriteHeader(status int) {
 	w.ResponseWriter.WriteHeader(status)
 }
 
-func Logging(logger *zap.Logger) func(http.Handler) http.Handler {
+func Logging(baseLogger *zap.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			start := time.Now()
-			sw := newStatusRecorder(w)
-			next.ServeHTTP(sw, r)
-			logger.Info("http request completed",
+			requestID := uuid.NewString()
+
+			logger := baseLogger.With(
+				zap.String("request_id", requestID),
 				zap.String("method", r.Method),
 				zap.String("path", r.URL.Path),
+			)
+
+			start := time.Now()
+
+			logger.Info("http request started")
+			sw := newStatusRecorder(w)
+			ctx := logctx.WithLogger(r.Context(), logger)
+			next.ServeHTTP(sw, r.WithContext(ctx))
+
+			logger.Info(
+				"http request completed",
 				zap.Int("status", sw.status),
 				zap.Duration("duration", time.Since(start)),
-				zap.String("remote_addr", r.RemoteAddr),
-				zap.String("user_agent", r.UserAgent()),
 			)
 		})
 	}
