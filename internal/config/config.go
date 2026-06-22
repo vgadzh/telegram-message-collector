@@ -31,10 +31,25 @@ type HTTP struct {
 }
 
 type Postgres struct {
-	DSN             string
+	Host            string
+	Port            int
+	DB              string
+	User            string
+	Password        string
 	MaxOpenConns    int
 	MaxIdleConns    int
 	ConnMaxLifetime time.Duration
+}
+
+func (p Postgres) DSN() string {
+	return fmt.Sprintf(
+		"postgres://%s:%s@%s:%d/%s?sslmode=disable",
+		p.User,
+		p.Password,
+		p.Host,
+		p.Port,
+		p.DB,
+	)
 }
 
 type JWT struct {
@@ -74,6 +89,10 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("error parsing HTTP shutdown timeout: %v", err)
 	}
 
+	postgresPort, err := getInt("POSTGRES_PORT", 5432)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing postgres port: %v", err)
+	}
 	maxOpenConns, err := getInt("POSTGRES_MAX_OPEN_CONNS", 20)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing max open connections: %v", err)
@@ -118,7 +137,11 @@ func Load() (*Config, error) {
 			ShutdownTimeout: shutdownTimeout,
 		},
 		Postgres: Postgres{
-			DSN:             getString("POSTGRES_DSN", ""),
+			Host:            getString("POSTGRES_HOST", ""),
+			Port:            postgresPort,
+			DB:              getString("POSTGRES_DB", ""),
+			User:            getString("POSTGRES_USER", ""),
+			Password:        getString("POSTGRES_PASSWORD", ""),
 			MaxOpenConns:    maxOpenConns,
 			MaxIdleConns:    maxIdleConns,
 			ConnMaxLifetime: connMaxLifetime,
@@ -144,8 +167,17 @@ func Load() (*Config, error) {
 }
 
 func (c Config) Validate() error {
-	if c.Postgres.DSN == "" {
-		return fmt.Errorf("POSTGRES_DSN is required")
+	if c.Postgres.Host == "" {
+		return fmt.Errorf("POSTGRES_HOST is required")
+	}
+	if c.Postgres.DB == "" {
+		return fmt.Errorf("POSTGRES_DB is required")
+	}
+	if c.Postgres.User == "" {
+		return fmt.Errorf("POSTGRES_USER is required")
+	}
+	if c.Postgres.Password == "" {
+		return fmt.Errorf("POSTGRES_PASSWORD is required")
 	}
 	if c.JWT.Secret == "" {
 		return fmt.Errorf("JWT_SECRET is required")

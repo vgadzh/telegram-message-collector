@@ -236,11 +236,22 @@ GET /health/ready
 
 # How To Run
 
+Kubernetes manifests are the primary deployment target. Docker Compose is provided only for local development and quick evaluation.
+
 Requirements:
 
 - Go 1.24+
 - PostgreSQL 17+
 - Telegram API credentials
+
+## Local development
+
+```bash
+make up
+make run
+```
+
+## Kubernetes
 
 Environment variables:
 
