@@ -8,8 +8,12 @@ import (
 	"syscall"
 
 	"github.com/vgadzh/telegram-message-collector/internal/app"
+	"github.com/vgadzh/telegram-message-collector/internal/bootstrap"
 	"github.com/vgadzh/telegram-message-collector/internal/config"
+	"github.com/vgadzh/telegram-message-collector/internal/migrate"
 	"github.com/vgadzh/telegram-message-collector/internal/observability"
+	"github.com/vgadzh/telegram-message-collector/internal/postgres"
+	"github.com/vgadzh/telegram-message-collector/internal/repo"
 )
 
 func main() {
@@ -34,6 +38,22 @@ func run() error {
 	defer func() {
 		_ = logger.Sync()
 	}()
+
+	pg, err := postgres.New(ctx, cfg.Postgres)
+	if err != nil {
+		return err
+	}
+	defer pg.Close()
+
+	if err := migrate.Up(ctx, pg.Pool(), "./migrations"); err != nil {
+		return fmt.Errorf("run migrations: %w", err)
+	}
+
+	userRepo := repo.NewUserRepo(pg.Pool())
+
+	if err := bootstrap.BootstrapAdmin(ctx, userRepo, cfg.Admin); err != nil {
+		return fmt.Errorf("bootstrap admin: %w", err)
+	}
 
 	app := app.New(ctx, cfg, logger)
 

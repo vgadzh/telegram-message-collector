@@ -14,6 +14,7 @@ type Config struct {
 	JWT
 	Telegram
 	Tracing
+	Admin
 }
 
 type App struct {
@@ -50,6 +51,11 @@ func (p Postgres) DSN() string {
 		p.Port,
 		p.DB,
 	)
+}
+
+type Admin struct {
+	Login        string
+	PasswordHash string
 }
 
 type JWT struct {
@@ -159,6 +165,10 @@ func Load() (*Config, error) {
 			ServiceName:  getString("TRACING_SERVICE_NAME", "telegram-message-collector"),
 			OTLPEndpoint: getString("TRACING_OTLP_ENDPOINT", ""),
 		},
+		Admin: Admin{
+			Login:        getString("ADMIN_LOGIN", ""),
+			PasswordHash: getString("ADMIN_PASSWORD_HASH", ""),
+		},
 	}
 	if err := cfg.Validate(); err != nil {
 		return nil, err
@@ -187,6 +197,12 @@ func (c Config) Validate() error {
 	}
 	if c.Telegram.APIHash == "" {
 		return fmt.Errorf("TELEGRAM_API_HASH is required")
+	}
+	if c.Admin.Login == "" {
+		return fmt.Errorf("ADMIN_LOGIN is required")
+	}
+	if c.Admin.PasswordHash == "" {
+		return fmt.Errorf("ADMIN_PASSWORD_HASH is required")
 	}
 	return nil
 }

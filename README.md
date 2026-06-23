@@ -203,7 +203,7 @@ GET /health/ready
 
 - [ ] PostgreSQL schema
 - [ ] Migrations
-- [ ] Configuration system
+- [x] Configuration system
 - [ ] JWT authentication
 - [ ] Tracing middleware
 - [ ] Session creation endpoint
@@ -243,6 +243,8 @@ Requirements:
 - Go 1.24+
 - PostgreSQL 17+
 - Telegram API credentials
+
+Before first start set ADMIN_PASSWORD_HASH.
 
 ## Local development
 
