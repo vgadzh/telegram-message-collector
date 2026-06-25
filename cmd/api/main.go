@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/vgadzh/telegram-message-collector/internal/app"
+	"github.com/vgadzh/telegram-message-collector/internal/auth"
 	"github.com/vgadzh/telegram-message-collector/internal/bootstrap"
 	"github.com/vgadzh/telegram-message-collector/internal/config"
 	"github.com/vgadzh/telegram-message-collector/internal/migrate"
@@ -55,7 +56,9 @@ func run() error {
 		return fmt.Errorf("bootstrap admin: %w", err)
 	}
 
-	app := app.New(ctx, cfg, logger)
+	authService := auth.New(cfg.JWT.Secret, cfg.JWT.AccessTokenTTL)
+
+	app := app.New(ctx, cfg, authService, logger)
 
 	logger.Info("service starting")
 	return app.Run()

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/vgadzh/telegram-message-collector/internal/auth"
 	"github.com/vgadzh/telegram-message-collector/internal/config"
 	httpserver "github.com/vgadzh/telegram-message-collector/internal/http"
 	"go.uber.org/zap"
@@ -18,8 +19,8 @@ type App struct {
 	httpServer *httpserver.Server
 }
 
-func New(ctx context.Context, cfg *config.Config, logger *zap.Logger) *App {
-	httpServer := httpserver.New(cfg, logger)
+func New(ctx context.Context, cfg *config.Config, authService *auth.Service, logger *zap.Logger) *App {
+	httpServer := httpserver.New(cfg, authService, logger)
 	a := &App{
 		ctx:        ctx,
 		cfg:        cfg,
