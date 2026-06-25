@@ -201,8 +201,8 @@ GET /health/ready
 
 ## v0.1 Foundation
 
-- [ ] PostgreSQL schema
-- [ ] Migrations
+- [x] PostgreSQL schema
+- [x] Migrations
 - [x] Configuration system
 - [ ] JWT authentication
 - [ ] Tracing middleware
