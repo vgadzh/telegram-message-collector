@@ -19,8 +19,8 @@ type App struct {
 	httpServer *httpserver.Server
 }
 
-func New(ctx context.Context, cfg *config.Config, authService *auth.Service, logger *zap.Logger) *App {
-	httpServer := httpserver.New(cfg, authService, logger)
+func New(ctx context.Context, cfg *config.Config, jwtService *auth.JWTService, loginService *auth.LoginService, logger *zap.Logger) *App {
+	httpServer := httpserver.New(cfg, jwtService, loginService, logger)
 	a := &App{
 		ctx:        ctx,
 		cfg:        cfg,

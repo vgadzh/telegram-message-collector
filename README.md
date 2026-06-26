@@ -204,7 +204,7 @@ GET /health/ready
 - [x] PostgreSQL schema
 - [x] Migrations
 - [x] Configuration system
-- [ ] JWT authentication
+- [x] JWT authentication
 - [ ] Tracing middleware
 - [ ] Session creation endpoint
 - [ ] Telegram code delivery

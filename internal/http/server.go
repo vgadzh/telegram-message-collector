@@ -17,16 +17,20 @@ type Server struct {
 	httpServer *http.Server
 }
 
-func New(cfg *config.Config, authService *auth.Service, logger *zap.Logger) *Server {
+func New(cfg *config.Config, jwtService *auth.JWTService, loginService *auth.LoginService, logger *zap.Logger) *Server {
 	healthHandler := handler.NewHealthHandler()
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /health/live", healthHandler.Live)
-	handlerChain := middleware.Chain(
-		mux,
+	loginHandler := handler.NewLoginHandler(loginService, jwtService)
+	sessionHandler := handler.NewSessionHandler()
 
-		middleware.Logging(logger),
-		middleware.JWT(authService),
-	)
+	mux := http.NewServeMux()
+	// public
+	mux.HandleFunc("GET /health/live", healthHandler.Live)
+	mux.HandleFunc("POST /login", loginHandler.Login)
+
+	// private
+	mux.Handle("POST /sessions/send-code", middleware.JWT(jwtService)(http.HandlerFunc(sessionHandler.SendCode)))
+
+	handlerChain := middleware.Chain(mux, middleware.Logging(logger))
 	return &Server{
 		httpServer: &http.Server{
 			Addr:              cfg.HTTP.Host + ":" + strconv.Itoa(cfg.HTTP.Port),

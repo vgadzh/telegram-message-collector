@@ -1,0 +1,17 @@
+### Login
+POST {{baseURL}}/login
+Content-Type: application/json
+
+{
+  "login": "{{login}}",
+  "password": "{{password}}"
+}
+
+> {%
+    if (response.status === 200) {
+        client.global.set("auth_token", response.body.token);
+        client.log("Token saved: " + client.global.get("auth_token"));
+    } else {
+        client.log("Login failed with status: " + response.status);
+    }
+%}

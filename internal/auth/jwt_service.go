@@ -18,19 +18,19 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-type Service struct {
+type JWTService struct {
 	secret   []byte
 	tokenTTL time.Duration
 }
 
-func New(secret string, tokenTTL time.Duration) *Service {
-	return &Service{
+func NewJWTService(secret string, tokenTTL time.Duration) *JWTService {
+	return &JWTService{
 		secret:   []byte(secret),
 		tokenTTL: tokenTTL,
 	}
 }
 
-func (s *Service) GenerateToken(userID int64, role string) (string, error) {
+func (s *JWTService) GenerateToken(userID int64, role string) (string, error) {
 	if userID <= 0 {
 		return "", errors.New("invalid user id")
 	}
@@ -47,7 +47,7 @@ func (s *Service) GenerateToken(userID int64, role string) (string, error) {
 	return token.SignedString(s.secret)
 }
 
-func (s *Service) ParseToken(tokenString string) (*Claims, error) {
+func (s *JWTService) ParseToken(tokenString string) (*Claims, error) {
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (any, error) {
 		return s.secret, nil

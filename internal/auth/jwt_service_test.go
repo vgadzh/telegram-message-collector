@@ -9,7 +9,7 @@ import (
 )
 
 func TestGenerateTokenInvalidUserID(t *testing.T) {
-	s := New("secret1", time.Hour)
+	s := NewJWTService("secret1", time.Hour)
 
 	userID := int64(0)
 	role := string(user.RoleAdmin)
@@ -24,7 +24,7 @@ func TestGenerateTokenInvalidUserID(t *testing.T) {
 }
 
 func TestGenerateTokenAndParseToken(t *testing.T) {
-	s := New("secret1", time.Hour)
+	s := NewJWTService("secret1", time.Hour)
 
 	userID := int64(123)
 	role := string(user.RoleAdmin)
@@ -56,7 +56,7 @@ func TestGenerateTokenAndParseToken(t *testing.T) {
 }
 
 func TestParseToken(t *testing.T) {
-	s := New("secret1", time.Hour)
+	s := NewJWTService("secret1", time.Hour)
 
 	tests := []struct {
 		name  string
@@ -83,8 +83,8 @@ func TestParseToken(t *testing.T) {
 }
 
 func TestParseTokenAnotherSecret(t *testing.T) {
-	s1 := New("secret1", time.Hour)
-	s2 := New("secret2", time.Hour)
+	s1 := NewJWTService("secret1", time.Hour)
+	s2 := NewJWTService("secret2", time.Hour)
 
 	token, err := s1.GenerateToken(123, string(user.RoleAdmin))
 	if err != nil {
@@ -101,7 +101,7 @@ func TestParseTokenAnotherSecret(t *testing.T) {
 }
 
 func TestParseTokenExpired(t *testing.T) {
-	s := New("secret1", -1*time.Hour)
+	s := NewJWTService("secret1", -1*time.Hour)
 
 	token, err := s.GenerateToken(123, string(user.RoleAdmin))
 	if err != nil {
@@ -117,7 +117,7 @@ func TestParseTokenExpired(t *testing.T) {
 }
 
 func TestParseTokenWrongIssuer(t *testing.T) {
-	s := New("secret", time.Hour)
+	s := NewJWTService("secret", time.Hour)
 	claims := Claims{
 		UserID: 123,
 		Role:   string(user.RoleAdmin),

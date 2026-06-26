@@ -2,10 +2,16 @@ package repo
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/vgadzh/telegram-message-collector/internal/domain/user"
+)
+
+var (
+	ErrUserNotFound = errors.New("user not found")
 )
 
 type UserRepo struct {
@@ -42,4 +48,32 @@ RETURNING id
 		return 0, fmt.Errorf("create user: %w", err)
 	}
 	return id, nil
+}
+
+func (r *UserRepo) GetByLogin(ctx context.Context, login string) (*user.User, error) {
+	const query = `
+SELECT
+	id,
+	login,
+	password_hash,
+	role,
+	created_at
+FROM users
+WHERE login=$1
+`
+	var u user.User
+	err := r.db.QueryRow(ctx, query, login).Scan(
+		&u.ID,
+		&u.Login,
+		&u.PasswordHash,
+		&u.Role,
+		&u.CreatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrUserNotFound
+		}
+		return nil, fmt.Errorf("user repo - GetByLogin: %w", err)
+	}
+	return &u, nil
 }

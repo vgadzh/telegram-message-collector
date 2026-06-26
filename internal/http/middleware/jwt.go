@@ -9,7 +9,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func JWT(authService *auth.Service) func(http.Handler) http.Handler {
+func JWT(authService *auth.JWTService) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			logger := logctx.FromContext(r.Context())

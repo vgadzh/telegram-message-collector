@@ -13,6 +13,7 @@ import (
 	"github.com/vgadzh/telegram-message-collector/internal/config"
 	"github.com/vgadzh/telegram-message-collector/internal/migrate"
 	"github.com/vgadzh/telegram-message-collector/internal/observability"
+	"github.com/vgadzh/telegram-message-collector/internal/observability/logctx"
 	"github.com/vgadzh/telegram-message-collector/internal/postgres"
 	"github.com/vgadzh/telegram-message-collector/internal/repo"
 )
@@ -40,6 +41,8 @@ func run() error {
 		_ = logger.Sync()
 	}()
 
+	ctx = logctx.WithLogger(ctx, logger)
+
 	pg, err := postgres.New(ctx, cfg.Postgres)
 	if err != nil {
 		return err
@@ -56,9 +59,10 @@ func run() error {
 		return fmt.Errorf("bootstrap admin: %w", err)
 	}
 
-	authService := auth.New(cfg.JWT.Secret, cfg.JWT.AccessTokenTTL)
+	jwtService := auth.NewJWTService(cfg.JWT.Secret, cfg.JWT.AccessTokenTTL)
+	loginService := auth.NewLoginService(userRepo)
 
-	app := app.New(ctx, cfg, authService, logger)
+	app := app.New(ctx, cfg, jwtService, loginService, logger)
 
 	logger.Info("service starting")
 	return app.Run()
